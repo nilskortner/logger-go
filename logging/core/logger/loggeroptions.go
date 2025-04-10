@@ -1,6 +1,6 @@
 package logger
 
-import "gurms/internal/infra/logging/core/model/loglevel"
+import "loggergo/logging/core/model/loglevel"
 
 type LoggerOptions struct {
 	loggerName  string

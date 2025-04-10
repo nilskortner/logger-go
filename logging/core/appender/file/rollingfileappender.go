@@ -2,23 +2,24 @@ package file
 
 import (
 	"fmt"
-	"gurms/internal/supportpkgs/datastructures/dequeue"
-	"gurms/internal/supportpkgs/mathsupport"
 	"io/fs"
+	"loggergo/datastructures/dequeue"
 	"loggergo/infra/lang"
+	"loggergo/infra/timezone"
 	"loggergo/logging/core/appender"
 	"loggergo/logging/core/appender/file/logfile"
 	"loggergo/logging/core/compression"
 	"loggergo/logging/core/model/loglevel"
 	"loggergo/logging/core/model/logrecord"
+	"loggergo/mathsupport"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
-	"timezone"
+
+	"golang.org/x/sys/unix"
 )
 
 const FIELD_DELIMITER string = "_"
@@ -341,10 +342,10 @@ func deleteLogFile(logFile logfile.LogFile) {
 }
 
 func getUsableSpace(path string) int64 {
-	var stat syscall.Statfs_t
+	var stat unix.Statfs_t
 
 	// Get file system statistics using Statfs
-	err := syscall.Statfs(path, &stat)
+	err := unix.Statfs(path, &stat)
 	if err != nil {
 		return 0
 	}

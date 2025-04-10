@@ -2,6 +2,7 @@ package mpscunboundedarrayqueue
 
 import (
 	"fmt"
+	"loggergo/mathsupport"
 	"loggergo/mpscunboundedarrayqueue/util"
 	"sync/atomic"
 )
@@ -109,7 +110,7 @@ func NewBaseMpscLinkedArrayQueue[T any](initialCapacity int) *BaseMpscLinkedArra
 		fmt.Println(err)
 	}
 
-	p2capacity := util.RoundToPowerOfTwo(initialCapacity)
+	p2capacity := mathsupport.RoundToPowerOfTwo(initialCapacity)
 
 	mask := int64(p2capacity - 1)
 
@@ -277,7 +278,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 
 	// Invalidate racing CASs
 	// We mever set the limit beyond the bounds of a buffer
-	b.soProducerLimit(pIndex + util.MinInt64(newMask, availableInQueue))
+	b.soProducerLimit(pIndex + mathsupport.MinInt64(newMask, availableInQueue))
 
 	// INDEX visible before ELEMENT, consistent with consumer expectation
 

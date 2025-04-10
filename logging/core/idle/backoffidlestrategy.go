@@ -1,7 +1,7 @@
 package idle
 
 import (
-	"gurms/internal/supportpkgs/mathsupport"
+	"loggergo/mathsupport"
 	"runtime"
 	"strconv"
 	"time"

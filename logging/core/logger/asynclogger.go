@@ -2,12 +2,12 @@ package logger
 
 import (
 	"bytes"
-	"gurms/internal/infra/logging/core/appender"
-	"gurms/internal/infra/logging/core/layout"
-	"gurms/internal/infra/logging/core/model/loglevel"
-	"gurms/internal/infra/logging/core/model/logrecord"
-	mpsc "gurms/internal/supportpkgs/datastructures/mpscunboundedarrayqueue"
-	"gurms/internal/supportpkgs/mathsupport"
+	"loggergo/logging/core/appender"
+	"loggergo/logging/core/layout"
+	"loggergo/logging/core/model/loglevel"
+	"loggergo/logging/core/model/logrecord"
+	"loggergo/mathsupport"
+	mpsc "loggergo/mpscunboundedarrayqueue"
 	"math"
 	"time"
 )

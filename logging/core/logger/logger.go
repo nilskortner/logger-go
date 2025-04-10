@@ -2,7 +2,7 @@ package logger
 
 import (
 	"bytes"
-	model "gurms/internal/infra/logging/core/model/loglevel"
+	model "loggergo/logging/core/model/loglevel"
 )
 
 type Logger interface {

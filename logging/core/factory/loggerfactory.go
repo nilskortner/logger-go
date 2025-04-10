@@ -1,14 +1,14 @@
 package factory
 
 import (
+	"loggergo/infra/cluster/nodetype"
+	"loggergo/infra/property/logging"
+	"loggergo/infra/system"
 	"loggergo/logging/core/appender"
 	"loggergo/logging/core/appender/file"
 	"loggergo/logging/core/layout"
 	"loggergo/logging/core/logger"
 	"loggergo/logging/core/model/logrecord"
-	"loggergo/node/nodetype"
-	"loggergo/property/env/common/logging"
-	"loggergo/system"
 	"strings"
 	"sync"
 
