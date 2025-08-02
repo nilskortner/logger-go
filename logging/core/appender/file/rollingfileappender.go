@@ -83,9 +83,9 @@ func NewRollingFileAppender(
 	maxFiles = mathsupport.Max(maxFiles, 0)
 	var maxFileBytes int64
 	if maxFileMb > 0 {
-		maxFileBytes = maxFileMb * 1024
+		maxFileBytes = maxFileMb * 1048576
 	} else {
-		maxFileBytes = 1024 * 1024 * 1024
+		maxFileBytes = 1073741824
 	}
 	minUsableSpaceBytes := int64(float64(maxFileBytes) * 2.5)
 

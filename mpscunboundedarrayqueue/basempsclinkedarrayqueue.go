@@ -18,9 +18,9 @@ type Buffer[T any] struct {
 }
 
 type BaseMpscLinkedArrayQueueProducerFields struct {
-	_             [8]uint64
+	_             [64]byte
 	producerIndex atomic.Int64
-	_             [8]uint64
+	_             [64]byte
 }
 
 func (pf *BaseMpscLinkedArrayQueueProducerFields) lvProducerIndex() int64 {
@@ -40,11 +40,11 @@ func (pf *BaseMpscLinkedArrayQueueProducerFields) casProducerIndex(expect, newVa
 }
 
 type BaseMpscLinkedArrayQueueConsumerFields[T any] struct {
-	_              [8]uint64
+	_              [64]byte
 	consumerIndex  atomic.Int64
 	consumerMask   int64
 	consumerBuffer []*atomic.Pointer[T]
-	_              [8]uint64
+	_              [64]byte
 }
 
 func (cf *BaseMpscLinkedArrayQueueConsumerFields[T]) GetCBuffer() []*atomic.Pointer[T] {
@@ -64,11 +64,11 @@ func (cf *BaseMpscLinkedArrayQueueConsumerFields[T]) soConsumerIndex(newValue in
 }
 
 type BaseMpscLinkedArrayQueueColdProducerFields[T any] struct {
-	_              [8]uint64
+	_              [64]byte
 	producerLimit  atomic.Int64
 	producerMask   int64
 	producerBuffer []*atomic.Pointer[T]
-	_              [8]uint64
+	_              [64]byte
 }
 
 func (cpf *BaseMpscLinkedArrayQueueColdProducerFields[T]) GetMask() int64 {
@@ -112,7 +112,7 @@ func NewBaseMpscLinkedArrayQueue[T any](initialCapacity int) *BaseMpscLinkedArra
 
 	p2capacity := mathsupport.RoundToPowerOfTwo(initialCapacity)
 
-	mask := int64(p2capacity - 1)
+	mask := int64(p2capacity-1) << 1
 
 	capacity := int64(p2capacity + 1)
 
@@ -174,7 +174,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) Offer(e T) bool {
 		mask = b.producerMask
 		buffer = b.producerBuffer
 
-		if producerLimit <= pIndex {
+		if producerLimit < pIndex {
 			result := b.offerSlowPath(mask, pIndex, producerLimit)
 			switch result {
 			case CONTINUE_TO_P_INDEX_CAS:
@@ -195,6 +195,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) Offer(e T) bool {
 	}
 	//INDEX visible before ELEMENT
 	offset := pIndex & mask
+	//println(pIndex & mask)
 	soRefElement(buffer, offset, p)
 	return true
 }
@@ -209,9 +210,14 @@ func (b *BaseMpscLinkedArrayQueue[T]) RelaxedPoll() (T, bool) {
 	offset := cIndex & mask
 	e := lvRefElement[T](buffer, offset)
 	if e == nil {
-		if buffer[1] != nil {
+		if buffer[b.Capacity-1] != nil {
 			nextBuffer := b.nextBuffer()
-			return *b.newBufferPoll(nextBuffer, cIndex), true
+			valuePointer := b.newBufferPoll(nextBuffer, cIndex)
+			if valuePointer != nil {
+				return *valuePointer, true
+			} else {
+				return zeroValue, false
+			}
 		}
 		return zeroValue, false
 	}
@@ -262,10 +268,10 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 	newBuffer := make([]*atomic.Pointer[T], newBufferLength)
 
 	b.producerBuffer = newBuffer
-	newMask := (newBufferLength - 2)
+	newMask := (newBufferLength - 2) << 1
 	b.producerMask = newMask
 
-	var offsetInOld int64 = 1
+	var offsetInOld int64 = b.Capacity - 1
 	offsetInNew := pIndex & newMask
 
 	soRefElement(newBuffer, offsetInNew, p)
@@ -283,7 +289,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 	// INDEX visible before ELEMENT, consistent with consumer expectation
 
 	// make resize visible to consumer
-	soRefElement(oldBuffer, offsetInOld, jump)
+	soRefElement(oldBuffer, offsetInOld<<1, jump)
 
 	// make resize visible to the other producers
 	b.soProducerIndex(pIndex + 2)
@@ -295,7 +301,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) nextBuffer() []*atomic.Pointer[T] {
 	var nextBuffer []*atomic.Pointer[T] = b.Head.data
 
 	b.consumerBuffer = nextBuffer
-	b.consumerMask = int64(len(nextBuffer) - 2)
+	b.consumerMask = int64(len(nextBuffer)-2) << 1
 	return nextBuffer
 }
 
@@ -303,7 +309,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) newBufferPoll(nextBuffer []*atomic.Pointer
 	offset := cIndex & b.consumerMask
 	n := lvRefElement[T](nextBuffer, offset)
 	if n == nil {
-		panic("new buffer must have at least one element")
+		return n
 	}
 	soRefElement(nextBuffer, offset, nil)
 	b.soConsumerIndex(cIndex + 2)
@@ -316,6 +322,7 @@ func (b *BaseMpscLinkedArrayQueue[T]) appendNext(nextBuffer []*atomic.Pointer[T]
 }
 
 func lvRefElement[T any](buffer []*atomic.Pointer[T], index int64) *T {
+	index = index >> 1
 	if buffer[index] == nil {
 		return nil
 	}
@@ -323,6 +330,7 @@ func lvRefElement[T any](buffer []*atomic.Pointer[T], index int64) *T {
 }
 
 func soRefElement[T any](buffer []*atomic.Pointer[T], index int64, value *T) {
+	index = index >> 1
 	if value == nil {
 		buffer[index] = nil
 		return
