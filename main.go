@@ -12,7 +12,7 @@ func main() {
 
 	t := time.Now().UnixMilli()
 
-	counter := 1_000
+	counter := 500_000_000
 
 	//queue := mpscunboundedarrayqueue.NewMpscUnboundedQueue[string](1024)
 

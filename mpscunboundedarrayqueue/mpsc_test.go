@@ -1,29 +1,35 @@
 package mpscunboundedarrayqueue
 
 import (
-	"fmt"
+	"sync"
 	"testing"
-	"time"
 )
 
 func TestData(t *testing.T) {
-	mpsc := NewMpscUnboundedQueue[int](64)
+	mpsc := NewMpscUnboundedQueue[int](1024)
 
-	println(mpsc.producerMask)
+	//println(mpsc.producerMask)
 
-	for i := 0; i < 3000; i++ {
-		mpsc.Offer(i)
+	counter := 100_000
+
+	var wait sync.WaitGroup
+	wait.Add(counter)
+
+	for i := 0; i < counter; i++ {
+		go func() {
+			mpsc.Offer(i)
+			wait.Done()
+		}()
 	}
-	for i := 0; i < 3000; i++ {
-		mpsc.RelaxedPoll()
-	}
 
-	println(mpsc.GetMask())
+	wait.Wait()
 
-	time.Sleep(1 * time.Second)
+	//println(mpsc.GetMask())
 
-	println(mpsc.producerIndex.Load())
-	println(mpsc.consumerIndex.Load())
+	//time.Sleep(1 * time.Second)
+
+	//println(mpsc.producerIndex.Load())
+	//println(mpsc.consumerIndex.Load())
 
 	//arr := mpsc.consumerBuffer
 	//for i, p := range arr {
@@ -34,12 +40,12 @@ func TestData(t *testing.T) {
 	//fmt.Printf("index %d: %+v\n", i, *val.Load()) // dereference
 	//}
 	//}
-	fmt.Println(mpsc.consumerBuffer)
-	fmt.Println(mpsc.producerBuffer)
+	//fmt.Println(mpsc.consumerBuffer)
+	//fmt.Println(mpsc.producerBuffer)
 	//println(*mpsc.producerBuffer[0].Load())
 
-	println(mpsc.producerLimit.Load())
+	//println(mpsc.producerLimit.Load())
 
-	println(mpsc.producerMask)
+	//println(mpsc.producerMask)
 
 }

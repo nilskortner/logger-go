@@ -256,6 +256,11 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 	if p == nil {
 		panic("no clear value defined in func resize()")
 	}
+
+	// TIMER
+	//timer := time.Now()
+	//
+
 	// make new JUMP Value Pointer
 	var jumpVal T
 	jump := &jumpVal
@@ -290,6 +295,13 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 
 	// make resize visible to consumer
 	soRefElement(oldBuffer, offsetInOld<<1, jump)
+
+	/// TIMER
+	//timing := time.Now().UnixMilli() - timer.UnixMilli()
+	//if timing > 1 {
+	//	println(timing)
+	//}
+	///
 
 	// make resize visible to the other producers
 	b.soProducerIndex(pIndex + 2)
