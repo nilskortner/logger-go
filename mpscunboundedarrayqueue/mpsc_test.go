@@ -6,18 +6,18 @@ import (
 )
 
 func TestData(t *testing.T) {
-	mpsc := NewMpscUnboundedQueue[int](1024)
+	mpsc := NewMpscUnboundedQueue[string](1024)
 
 	//println(mpsc.producerMask)
 
-	counter := 100_000
+	counter := 100_0000
 
 	var wait sync.WaitGroup
 	wait.Add(counter)
 
 	for i := 0; i < counter; i++ {
 		go func() {
-			mpsc.Offer(i)
+			mpsc.Offer("fatal error")
 			wait.Done()
 		}()
 	}

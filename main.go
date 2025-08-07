@@ -1,9 +1,7 @@
 package main
 
 import (
-	"loggergo/infra/cluster/nodetype"
-	"loggergo/infra/property/logging"
-	"loggergo/logging/core/factory"
+	"loggergo/mpscunboundedarrayqueue"
 	"sync"
 	"time"
 )
@@ -12,20 +10,21 @@ func main() {
 
 	t := time.Now().UnixMilli()
 
-	counter := 500_000_000
+	counter := 1000_000
 
-	//queue := mpscunboundedarrayqueue.NewMpscUnboundedQueue[string](1024)
+	queue := mpscunboundedarrayqueue.NewMpscUnboundedQueue[string](1024)
 
 	var wait sync.WaitGroup
 	wait.Add(counter)
 
-	factory.Loggerfactory(false, "test", nodetype.SERVICE, logging.NewLoggingProperties())
-	testlogger := factory.GetLogger("testlogger")
+	//factory.Loggerfactory(false, "test", nodetype.SERVICE, logging.NewLoggingProperties())
+	//testlogger := factory.GetLogger("testlogger")
 
 	for i := 0; i < counter; i++ {
 		go func() {
-			testlogger.Fatal("fatal error")
+			//testlogger.Fatal("fatal error")
 			//time.Sleep(500 * time.Millisecond)
+			queue.Offer("fatal error")
 			wait.Done()
 		}()
 	}

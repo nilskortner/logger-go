@@ -5,6 +5,7 @@ import (
 	"loggergo/mathsupport"
 	"loggergo/mpscunboundedarrayqueue/util"
 	"sync/atomic"
+	"time"
 )
 
 var CONTINUE_TO_P_INDEX_CAS int = 0
@@ -163,11 +164,19 @@ func (b *BaseMpscLinkedArrayQueue[T]) Offer(e T) bool {
 	var buffer []*atomic.Pointer[T]
 	var pIndex int64
 
+	/// Fix For Cas Contention. Not in Tests
+	//attempts := 0
+
 	for {
 		producerLimit := b.lvProducerLimit()
 		pIndex = b.lvProducerIndex()
 
 		if (pIndex & 1) == 1 {
+			/// Fix For Cas Contention
+			//attempts++
+			//backoff := time.Duration(rand.Intn(1<<uint(min(attempts, 10)))) * time.Microsecond
+			//time.Sleep(backoff)
+			///
 			continue
 		}
 
@@ -257,8 +266,8 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 		panic("no clear value defined in func resize()")
 	}
 
-	// TIMER
-	//timer := time.Now()
+	//TIMER
+	timer := time.Now()
 	//
 
 	// make new JUMP Value Pointer
@@ -296,10 +305,10 @@ func (b *BaseMpscLinkedArrayQueue[T]) resize(oldBuffer []*atomic.Pointer[T], pIn
 	// make resize visible to consumer
 	soRefElement(oldBuffer, offsetInOld<<1, jump)
 
-	/// TIMER
-	//timing := time.Now().UnixMilli() - timer.UnixMilli()
+	// TIMER
+	timing := time.Now().UnixMilli() - timer.UnixMilli()
 	//if timing > 1 {
-	//	println(timing)
+	println(timing)
 	//}
 	///
 
